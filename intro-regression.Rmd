@@ -1,0 +1,81 @@
+---
+title: "Untitled"
+author: "femi oloye"
+date: "2023-05-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(stargazer)
+library(tidyverse)
+```
+
+# load data 
+```{r}
+data=read.csv("ds_salaries.csv")
+head(data)
+```
+
+# dimension and structure
+```{r}
+dim(data)
+str(data)
+```
+
+# missing data
+```{r}
+sum(is.na(data))
+```
+
+# convert data type
+```{r}
+data$experience_level=factor(data$experience_level)
+data$employment_type=factor(data$employment_type)
+data$job_title=factor(data$job_title)
+data$salary_currency = factor(data$salary_currency)
+data$employee_residence=factor(data$employee_residence)
+data$company_location=factor(data$company_location)
+data$company_size=factor(data$company_size)
+```
+
+# exploratory analysis
+## check for outliers using interquartile range
+```{r}
+Q1 <- quantile(data$salary, 0.25)
+Q3 <- quantile(data$salary, 0.75)
+IQR <- Q3 - Q1
+lower_bound <- Q1 - 1.5 * IQR
+upper_bound <- Q3 + 1.5 * IQR
+outliers <- data$salary < lower_bound | data$salary > upper_bound
+outliers
+```
+
+## barplot
+```{r}
+x= data%>%
+  group_by(work_year) %>%
+  summarise(salary=n())
+ggplot(x, aes(x=work_year,y=salary))+geom_bar(stat = "identity")
+```
+
+
+```{r}
+x= data%>%
+  group_by(employment_type) %>%
+  summarise(salary=n())
+x
+ggplot(x, aes(x=employment_type ,y=salary))+geom_bar(stat = "identity")+coord_flip()
+```
+
+
+```{r}
+ggplot(data,aes(x=experience_level, y=log(salary)))+geom_violin(trim = FALSE)+stat_summary(fun.y = mean, geom = "point", shape=20)
+```
+
+# regression analysis
+```{r}
+model = lm(log(salary)~experience_level, data = data)
+summary(model)
+```
